@@ -1,0 +1,19 @@
+# You can use %{..} for referencing inside this config file. see configparser.ExtendedInterpolation
+[database]
+db_type= mysql
+
+database_host=
+database_Port=
+database_name=
+database_user=
+database_password=
+#database_password=
+[pattern:fping]
+# fping 8.8.8.8 -l -D
+#:[1611517430.107899] 8.8.8.8 : [1], 84 bytes, 56.0 ms (51.4 avg, 0% loss)
+
+# See documentation for python parse
+parser=[{unixts}] {destAddr} : [{id}], {bytesize} bytes, {ms} ms ({})
+
+# Use %(...)s for fields
+sql=INSERT INTO PingLogs SET unix_ts=(%(unixts)s), destAddress=%(destAddr)s, byteSize=%(bytesize)s, rtt_msec=%(ms)s, initiator_id='eladpi'

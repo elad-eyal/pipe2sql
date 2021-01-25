@@ -1,0 +1,64 @@
+#!/usr/bin/python3
+
+import logging
+import sys
+import time
+
+from configparser import ConfigParser, ExtendedInterpolation
+
+import mysql.connector
+import parse
+
+cfg = ConfigParser(interpolation=ExtendedInterpolation())
+cfg.read("config")
+
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s %(levelname)-8s %(message)s',
+                    datefmt="%Y-%m-%d %H:%M:%S",
+                    handlers=[# TODO # logging.FileHandler(_logfilename),
+                              logging.StreamHandler(sys.stdout)])
+logging.getLogger("parse").setLevel(logging.WARNING)
+
+patterns = [cfg[s] for s in cfg.sections() if s.startswith("pattern:")]
+
+conn = mysql.connector.connect(
+	host=cfg.get("database", "database_host"), 
+	port=cfg.getint("database", "database_port"), 
+	user=cfg.get("database", "database_user"),
+	password=cfg.get("database", "database_password"),
+	database=cfg.get("database", "database_name"))
+cursor = conn.cursor()
+
+
+while True:
+    stmts = []
+
+    end = time.time() + 300 # TODO configuration option
+
+    for s in sys.stdin:
+        if not s: # TODO exiting when stdin is clos does not work
+            break
+
+        s = s.strip()
+     
+        for p in patterns:
+            r = parse.parse(p["parser"], s)
+            if r:
+                stmts.append((p["sql"], r.named,))
+                break
+        else: # no break
+            logging.warn(f"unable to parse", s)
+            # TODO add a default statement?
+
+        if time.time() > end:
+              break
+
+    while not conn.is_connected():
+        conn.ping(reconnect=True, attempts=20)
+
+    logging.debug(f"Executing {len(stmts)} SQL statements")
+
+    for sql, fields in stmts:
+        cursor.execute(sql, fields)
+
+    conn.commit()
