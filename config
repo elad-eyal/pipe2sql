@@ -16,4 +16,11 @@ database_password=
 parser=[{unixts}] {destAddr} : [{id}], {bytesize} bytes, {ms} ms ({})
 
 # Use %(...)s for fields
-sql=INSERT INTO PingLogs SET unix_ts=(%(unixts)s), destAddress=%(destAddr)s, byteSize=%(bytesize)s, rtt_msec=%(ms)s, initiator_id='eladpi'
+sql=INSERT INTO PingLogs SET unix_ts=(%(unixts)s), destAddress=%(destAddr)s, byteSize=%(bytesize)s, rtt_msec=%(ms)s, initiator_id='${HOSTNAME}'
+
+[periodic:update_timestamp]
+# periodic commands will be issues first on invocation of program
+# periodic commands will only be executed when enough stdin lines were collected
+# period accepted format: 1.5h 20m 200s
+period=30m
+sql=UPDATE PingLogs SET timestamp=FROM_UNIXTIME(unix_ts) WHERE timestamp IS NULL
