@@ -63,7 +63,7 @@ while True:
     end = time.time() + 300 # TODO configuration option
 
     for s in sys.stdin:
-        if not s: # TODO exiting when stdin is clos does not work
+        if not s: # TODO exiting when stdin is closed does not work
             break
 
         s = s.strip()
