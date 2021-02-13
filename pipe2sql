@@ -41,8 +41,9 @@ logging.getLogger("parse").setLevel(logging.WARNING)
 database = cfg["database"]
 patterns = [cfg[s] for s in cfg.sections() if s.startswith("pattern:")]
 periodics = { s : [cfg[s], time.time()] for s in cfg.sections() if s.startswith("periodic:") }
+unrecognizes = cfg["unrecognized"]
 
-accepted_sections = ["database"]+[p.name for p in patterns] + list(periodics.keys())
+accepted_sections = ["database", "unrecognized"]+[p.name for p in patterns] + list(periodics.keys())
 for s in cfg.sections():
     if s not in accepted_sections:
         logging.error(f"Section is not recognized: {s}")
@@ -73,8 +74,8 @@ while True:
                 stmts.append((p["sql"], r.named,))
                 break
         else: # no break
-            logging.warn(f"unable to parse", s)
-            # TODO add a default statement?
+            if unrecognized:
+                 stmts.append((unrecognized["sql"], { "text" : s }, ))
 
         if time.time() > end:
               break

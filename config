@@ -18,6 +18,9 @@ parser=[{unixts}] {destAddr} : [{id}], {bytesize} bytes, {ms} ms ({})
 # Use %(...)s for fields
 sql=INSERT INTO PingLogs SET unix_ts=(%(unixts)s), destAddress=%(destAddr)s, byteSize=%(bytesize)s, rtt_msec=%(ms)s, initiator_id='${HOSTNAME}'
 
+[unrecognized]
+sql=INSERT INTO LogMsgs SET timestamp=NOW()m, msg=%{_text}
+
 [periodic:update_timestamp]
 # periodic commands will be issues first on invocation of program
 # periodic commands will only be executed when enough stdin lines were collected
